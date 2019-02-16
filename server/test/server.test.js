@@ -2,7 +2,7 @@ const request = require('supertest');
 const should = require('chai').should();
 const expect = require('chai').expect;
 const {app} = require('../server');
-const Todos = require('../models/todos');
+const {Todos} = require('../models/todos');
 
 const todos = [{
     text: "First Todo"

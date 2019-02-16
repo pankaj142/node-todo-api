@@ -6,7 +6,7 @@ const {ObjectId} = require('mongodb');
 //users apis - find, findById 
 let userId = '5c659c519262250e84b51c32';
 Users.find({_id: userId}).then((users)=>{
-    if(!users.length){
+    if(!users){
         return console.log('No user is present. - find')
     }
     console.log('Users - find', JSON.stringify(users, undefined, 2))
@@ -15,7 +15,7 @@ Users.find({_id: userId}).then((users)=>{
 })
 
 Users.findById(userId).then((users)=>{
-    if(users === null){
+    if(!users){
         return console.log('No user is present. - findById')
     }
     console.log('Users - findbyid',JSON.stringify(users,undefined, 2))
@@ -29,7 +29,7 @@ if(!ObjectId.isValid(todoId)){
     console.log('todoId object id is not valid')
 }
 Todos.find({_id : todoId}).then((todos)=>{
-    if(!todos.length){
+    if(!todos){
         return console.log('No todo is present. - find')
     }
     console.log('Todos - find',JSON.stringify(todos,undefined, 2))
@@ -38,7 +38,7 @@ Todos.find({_id : todoId}).then((todos)=>{
 })
 
 Todos.findOne({_id : todoId}).then((todos)=>{
-    if(todos === null){
+    if(!todos){
         return console.log('No todo is present. - findOne')
     }
     console.log('Todos - findOne',JSON.stringify(todos,undefined, 2))
@@ -47,7 +47,7 @@ Todos.findOne({_id : todoId}).then((todos)=>{
 })
 
 Todos.findById(todoId).then((todo)=>{
-    if(todo === null){
+    if(!todo){
         return console.log('No todo is present. - findById')
     }
     console.log('Todos - findById',JSON.stringify(todos,undefined, 2))
