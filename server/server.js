@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('./db/mongoose');
 
 //Models
-var Todos = require('./models/todos');
+var {Todos} = require('./models/todos');
 var User = require('./models/user');
 
 const app = express();
@@ -18,6 +18,14 @@ app.post('/todos', (req,res)=>{
         res.send(doc);
     }).catch((err)=>{
         res.status(400).send(err);
+    })
+});
+
+app.get('/todos', (req,res)=>{
+    Todos.find({}).then((todos)=>{
+        res.send({todos});
+    }).catch((err)=>{
+        res.status(400).send(err)
     })
 });
 
