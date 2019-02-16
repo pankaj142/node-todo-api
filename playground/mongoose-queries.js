@@ -23,11 +23,6 @@ Users.findById(userId).then((users)=>{
     console.log('Users - findbyid - error',JSON.stringify(err,undefined,2 ))
 })
 
-// Todos.remove().then((result)=>{
-//     console.log("reove totods",result)
-// })
-
-
 //todos apis - find, findOne, findById
 var todoId = '5c681219a76dbe1928ca6562';
 if(!ObjectId.isValid(todoId)){
