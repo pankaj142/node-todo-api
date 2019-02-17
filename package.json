@@ -6,8 +6,7 @@
   "scripts": {
     "start":"node server/server.js",
     "test": "mocha server/**/*.test.js",
-    "test-watch": "nodemon --exec \"npm test\" ",
-    "start": "nodemon server/server"
+    "test-watch": "nodemon --exec \"npm test\" "
   },
   "keywords": [
     "nodejs",
