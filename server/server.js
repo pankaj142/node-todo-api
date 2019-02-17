@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('./db/mongoose');
 const {ObjectId} = require('mongodb');
+const port = process.env.port || 3000;
 
 //Models
 var {Todos} = require('./models/todos');
@@ -49,8 +50,8 @@ app.get('/todos', (req,res)=>{
 app.get('/',(req,res)=>{
     res.send("hello")
 })
-app.listen(3000, (err)=>{
-    console.log("Server is accepting requests on port 3000.")
+app.listen(port, (err)=>{
+    console.log(`Server is running at port ${port}`)
 });
 
 module.exports = {app};
