@@ -11,7 +11,7 @@ const app = express();
 // app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json());
 
-app.get('/todo/:id', (req,res)=>{
+app.get('/todos/:id', (req,res)=>{
     var id = req.params.id;
     if(!ObjectId.isValid(id)){
         return res.status(404).send({});
