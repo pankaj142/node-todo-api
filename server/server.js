@@ -12,6 +12,23 @@ const app = express();
 // app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json());
 
+app.delete('/todos/:id', (req,res)=>{
+    var id = req.params.id;
+    if(!ObjectId.isValid(id)){
+        return res.status(404).send();
+    }
+
+    Todos.findByIdAndDelete(id).then((todo)=>{
+        console.log('result',todo)
+        if(!todo){
+            return res.status(404).send();
+        }
+        res.status(200).send();
+    }).catch((error)=>{
+        res.status(400).send({});
+    })
+})
+
 app.get('/todos/:id', (req,res)=>{
     var id = req.params.id;
     if(!ObjectId.isValid(id)){
