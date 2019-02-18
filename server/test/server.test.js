@@ -124,4 +124,43 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                 .end(done);
         });
     })
+
+    describe('DELETE /todos/:id', ()=>{
+        it('should delete a todo.',(done)=>{
+            var todoId = todos[0]._id.toHexString();
+            request(app)
+                .delete(`/todos/${todoId}`)
+                .expect(200)
+                .expect((res)=>{
+                    expect(res.body.todo._id).to.equal(todoId)
+                })
+                .end((err,res)=>{
+                    if(err){
+                        return done(err);
+                    }
+                    Todos.findById(res.body._id).then((todo)=>{
+                        expect(todo).to.be.null;
+                        done();
+                    }).catch((err)=>{
+                        done(err);
+                    })
+                })
+        })
+
+        it('should return 404 if todo is not found.', (done)=>{
+            var dummyObjectId = new ObjectId().toHexString();
+            request(app)
+                .delete(`/todos/${dummyObjectId}`)
+                .expect(404)
+                .end(done)
+        })
+
+        it('should return 404 for non-objetc Ids.', (done)=>{
+            var nonObjectId = 123;
+            request(app)
+                .delete(`/todos/${nonObjectId}`)
+                .expect(404)
+                .end(done)
+        })
+    })
 })
