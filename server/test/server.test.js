@@ -6,12 +6,16 @@ const {app} = require('../server');
 const {Todos} = require('../models/todos');
 const {ObjectId} = require('mongodb');
 
-const todos = [{
+const dummyTodos = [{
     _id : new ObjectId(),
-    text : "First Todo"
+    text : "First Todo",
+    completed: true,
+    completedAt: 6666666
 },{
     _id : new ObjectId(),
-    text : "second Todo"
+    text : "second Todo",
+    completed: true,
+    completedAt: 44444444
 },
 {
     _id : new ObjectId(),
@@ -28,7 +32,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
         Todos.deleteMany({})
             .then(()=>{
                 // console.log('deleted');
-                return Todos.insertMany(todos);
+                return Todos.insertMany(dummyTodos);
             })
             .then(()=>{
                 // console.log('inserted');
@@ -101,10 +105,10 @@ describe('----------- TESTING ROUTES -------------', ()=>{
     describe('GET /todos/:id', ()=>{
         it('should return a todo doc.', (done)=>{
             request(app)
-                .get(`/todos/${todos[0]._id.toHexString()}`)
+                .get(`/todos/${dummyTodos[0]._id.toHexString()}`)
                 .expect(200)
                 .expect((res)=>{
-                    expect(res.body.todo.text).to.equal(todos[0].text);
+                    expect(res.body.todo.text).to.equal(dummyTodos[0].text);
                 })
                 .end(done);
         });
@@ -127,7 +131,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
 
     describe('DELETE /todos/:id', ()=>{
         it('should delete a todo.',(done)=>{
-            var todoId = todos[0]._id.toHexString();
+            var todoId = dummyTodos[0]._id.toHexString();
             request(app)
                 .delete(`/todos/${todoId}`)
                 .expect(200)
@@ -162,5 +166,37 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                 .expect(404)
                 .end(done)
         })
+    })
+
+    describe("PATCH /todos/:id", ()=>{
+        it('should update the todo.',  (done)=>{
+            var newTodo = {text: "second todo modify", completed: true}
+            request(app)
+                .patch(`/todos/${dummyTodos[1]._id}`)
+                .send(newTodo)
+                .expect(200)
+                .expect((res)=>{
+                    expect(res.body.todo.text).to.equal(newTodo.text);
+                    expect(res.body.todo.completed).to.be.true;
+                    expect(res.body.todo.completedAt).is.a('number');
+                })
+                .end(done)
+        })
+
+        it('should clear completedAt when todo is not completed.', (done)=>{
+            var newTodo = {text: "todo is not completed", completed: false}
+            request(app)
+                .patch(`/todos/${dummyTodos[0]._id}`)
+                .send(newTodo)
+                .expect(200)
+                .expect((res)=>{
+                    expect(res.body.todo.text).to.equal(newTodo.text);
+                    expect(res.body.todo.completed).to.be.false;
+                    expect(res.body.todo.completedAt).to.be.null;
+                })
+                .end(done)
+        })
+
+        //we can also test for ObjectId is valid or not for this route
     })
 })
