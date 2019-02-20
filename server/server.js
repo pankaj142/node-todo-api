@@ -8,12 +8,13 @@ const _ = require('lodash');
 
 //Models
 var {Todos} = require('./models/todos');
-var User = require('./models/user');
+var {User} = require('./models/user');
 
 const app = express();
 // app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json());
 
+//Routes - Todos
 app.delete('/todos/:id', (req,res)=>{
     var id = req.params.id;
     if(!ObjectId.isValid(id)){
@@ -70,6 +71,7 @@ app.get('/',(req,res)=>{
     res.send("hello")
 })
 
+//update todo
 app.patch('/todos/:id', (req,res)=>{
     var id = req.params.id;
     var body = _.pick(req.body, ['text', 'completed']);
@@ -96,6 +98,20 @@ app.patch('/todos/:id', (req,res)=>{
         })
 })
 
+//Routes - Users
+app.post('/users', (req,res)=>{
+    var body = _.pick(req.body, ['email', 'password']);
+    var newUser = new User(body);
+    newUser.save().then((newUser)=>{
+        return newUser.generateAuthToken();
+    }) 
+    .then((token)=>{//chaining promise of generateAuthToken()
+        res.header('x-auth',token).send(newUser);
+    })
+    .catch((err)=>{
+        res.status(400).send(err);
+    })
+})
 app.listen(port, (err)=>{
     console.log(`Server is running at port ${port}`)
 });
