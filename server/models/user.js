@@ -31,14 +31,17 @@ const UserSchema = new mongoose.Schema({
     }]
 })
 
-//Overwrite a mongoose method- how mongoose handle the data
+//method created on Model.methods Object turns it into a instance(document) method of that model 
+//method created on Model.statics Object turns it into a Model method
+// Model- User
+//Instance- user
 UserSchema.methods.toJSON = function(){
     var user = this;
     var userObject = user.toObject();
     return _.pick(userObject, ['_id', 'email']);
 }
 
-//custom method on mongoose UserSchema object
+//custom method on mongoose UserSchema Model.methods object
 UserSchema.methods.generateAuthToken = function(){
     var user = this;
     var access = 'auth';
@@ -49,6 +52,27 @@ UserSchema.methods.generateAuthToken = function(){
         return token ;
     });
 }
+
+//
+UserSchema.statics.findByToken = function(token){
+    var User = this;
+    var decoded;
+    try{
+        decoded = jwt.verify(token, '123abc');
+    }catch(e){
+        // return new Promise((resolve, reject)=>{
+        //     return reject('token invalid');
+        // })
+        return Promise.reject();
+    }
+    return User.findOne({
+        _id: decoded._id,
+        //for nested object property wrap in '' quotes
+        'tokens.token': token,
+        'tokens.access': 'auth' 
+    });
+}
+
 var User = mongoose.model("User", UserSchema)
 
 module.exports = {User}

@@ -1,10 +1,14 @@
-const config = require('./config/config');
+require('./config/config');
+
+const mongoose = require('./db/mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
-const mongoose = require('./db/mongoose');
 const {ObjectId} = require('mongodb');
-const port = process.env.PORT;
 const _ = require('lodash');
+const port = process.env.PORT;
+
+//middlewares
+const {authenticate} = require('./middleware/authenticate');
 
 //Models
 var {Todos} = require('./models/todos');
@@ -112,8 +116,14 @@ app.post('/users', (req,res)=>{
         res.status(400).send(err);
     })
 })
+
 app.listen(port, (err)=>{
     console.log(`Server is running at port ${port}`)
 });
+
+//private route
+app.get('/users/me', authenticate, (req,res)=>{
+    res.send(req.user);
+})
 
 module.exports = {app};
