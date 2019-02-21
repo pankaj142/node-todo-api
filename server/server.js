@@ -26,7 +26,6 @@ app.delete('/todos/:id', (req,res)=>{
     }
 
     Todos.findByIdAndDelete(id).then((todo)=>{
-        // console.log('result',todo)
         if(!todo){
             return res.status(404).send();
         }
