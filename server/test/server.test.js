@@ -4,47 +4,21 @@ const should = require('chai').should();
 const expect = require('chai').expect;
 const {app} = require('../server');
 const {Todos} = require('../models/todos');
+const {User} = require('../models/user');
 const {ObjectId} = require('mongodb');
+const {populateTodos, dummyTodos, populateUsers, dummyUsers} = require('./seed/seed');
 
-const dummyTodos = [{
-    _id : new ObjectId(),
-    text : "First Todo",
-    completed: true,
-    completedAt: 6666666
-},{
-    _id : new ObjectId(),
-    text : "second Todo",
-    completed: true,
-    completedAt: 44444444
-},
-{
-    _id : new ObjectId(),
-    text : "Third Todo"
-}]
 
 // afterEach((done)=>{
 //     Todos.deleteMany({}).then(()=>done());
 // })
 
+beforeEach(populateTodos);
+beforeEach(populateUsers);
 
 describe('----------- TESTING ROUTES -------------', ()=>{
-    beforeEach((done)=>{
-        Todos.deleteMany({})
-            .then(()=>{
-                // console.log('deleted');
-                return Todos.insertMany(dummyTodos);
-            })
-            .then(()=>{
-                // console.log('inserted');
-                done()
-            })
-            .catch((err)=>{
-                done(err)
-            })
-    })
-
     describe('POST /todos', ()=>{
-        it('should create a new todo.', (done)=>{
+        it('should create a new todo.', (done)=>{//done beacuse its asychronous test 
             let testingText = "xxxxx";
             request(app)
                .post('/todos')
@@ -60,7 +34,6 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                        return done(err);
                    }
                    //assertion about wheather expected data(todo) is saved on collection(todos) or not
-                   //assumption- no todo is present on todos collection prior to this test as we remove all todos in beforeEach function                  
                    Todos.find().then((todos)=>{
                        expect(todos.length).to.equal(4);
                        expect(todos[3].text).to.equal(testingText);
@@ -96,9 +69,9 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                 .get('/todos')
                 .expect(200)
                 .expect((response)=>{
-                    expect(response.todos.length).to.equal(3);
+                    expect(JSON.parse(response.text).todos.length).to.equal(3);
                 })
-                .end(done());
+                .end(done);
         })
     })
 
@@ -198,5 +171,72 @@ describe('----------- TESTING ROUTES -------------', ()=>{
         })
 
         //we can also test for ObjectId is valid or not for this route
+    })
+
+    describe('GET /user/me', ()=>{
+        it('should return user if authenticated.',(done)=>{
+            request(app)
+                .get('/users/me')
+                .set('x-auth', dummyUsers[0].tokens[0].token)
+                .expect(200)
+                .expect((response)=>{
+                    expect(response.body._id).to.be.equal(dummyUsers[0]._id.toHexString());
+                    expect(response.body.email).to.be.equal(dummyUsers[0].email)
+                })
+                .end(done)
+        })
+
+        it('should return 401 if not authenticated.', (done)=>{
+            request(app)
+                .get('/users/me')
+                .expect(401)
+                .expect((response)=>{
+                    expect(response.body).to.be.empty;
+                })
+                .end(done)
+        })
+    })
+
+    describe('POST /users', ()=>{
+        it('should create new user', (done)=>{
+            var email = 'pankaj@mail.com';
+            var password = 'panakj123'
+            request(app)
+                .post('/users')
+                .send({email,password})
+                .expect(200)
+                .expect((response)=>{
+                    expect(response.header['x-auth']).to.be.exist;
+                    expect(response.body._id).to.be.exist;
+                    expect(response.body.email).to.be.equal(email);
+                })
+                .end((err)=>{
+                    if(err){
+                        return done(err);
+                    }
+                    User.findOne({email}).then((user)=>{
+                        expect(user.email).to.be.equal(email)
+                        expect(user.password).to.be.exist;
+                        done();
+                    })
+                })
+        })
+        it('should return validation error if request invalid.',(done)=>{
+            request(app)
+                .post('/users')
+                .send({email: 'invalidEmail',password: '123'})
+                .expect(400)
+                .end(done)
+        })
+        it('should not create a user if email is in use.', (done)=>{
+            request(app)
+                .post('/user')
+                .send({
+                    email : dummyUsers[0].email,
+                    password: 'validPassword'
+                })
+                .send(400)
+                .end(done)
+        })
     })
 })

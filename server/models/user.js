@@ -36,17 +36,19 @@ const UserSchema = new mongoose.Schema({
 //method created on Model.statics Object turns it into a Model method
 // Model- User
 //Instance- user
+
+//Modified UserSchema Model Instance toJSON Method
 UserSchema.methods.toJSON = function(){
     var user = this;
     var userObject = user.toObject();
     return _.pick(userObject, ['_id', 'email']);
 }
 
-//custom method on mongoose UserSchema Model.methods object
+//custom UserSchema Model Instance Method  
 UserSchema.methods.generateAuthToken = function(){
     var user = this;
     var access = 'auth';
-    var token = jwt.sign({_id: user._id.toHexString()}, '123abc').toString();
+    var token = jwt.sign({_id: user._id.toHexString(), access}, '123abc').toString();
     // user.tokens.push({access, token})
     user.tokens = user.tokens.concat([{access,token}]);
     return user.save().then(()=>{
@@ -54,7 +56,7 @@ UserSchema.methods.generateAuthToken = function(){
     });
 }
 
-//creating Model method
+//custom UserSchema Model Method
 UserSchema.statics.findByToken = function(token){
     var User = this;
     var decoded;
@@ -73,7 +75,7 @@ UserSchema.statics.findByToken = function(token){
         'tokens.access': 'auth' 
     });
 }
-//Model middleware for hashing password
+//pre middleware for 'save' method on UserSchema Model for hashing password
 UserSchema.pre('save', function(next){
     var user = this;
     if(user.isModified('password')){
