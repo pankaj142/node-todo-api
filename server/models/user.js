@@ -75,6 +75,23 @@ UserSchema.statics.findByToken = function(token){
         'tokens.access': 'auth' 
     });
 }
+
+//custom method Model Method
+UserSchema.statics.findByCredentials = function(email,password){
+    var User = this;
+    return User.findOne({email}).then((user)=>{
+        if(!user){
+            return Promise.reject();
+        }
+        return bcrypt.compare(password, user.password).then((res)=>{
+            if(res){
+                return Promise.resolve(user);
+            }
+            return Promise.reject();
+        })
+    })
+}
+
 //pre middleware for 'save' method on UserSchema Model for hashing password
 UserSchema.pre('save', function(next){
     var user = this;

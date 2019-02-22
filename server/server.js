@@ -5,6 +5,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectId} = require('mongodb');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 const port = process.env.PORT;
 
 //middlewares
@@ -114,6 +115,34 @@ app.post('/users', (req,res)=>{
     .catch((err)=>{
         res.status(400).send(err);
     })
+})
+
+app.post('/users/login', (req,res)=>{
+    var body = _.pick(req.body, ['email', 'password']);
+    User.findByCredentials(body.email,body.password)
+        .then((user)=>{
+            user.generateAuthToken().then((token)=>{
+                res.header('x-auth', token).status(200).send(user);
+            });
+        })
+        .catch((err)=>{
+            res.status(400).send(err)
+        })
+    
+    // console.log('req',req.body)
+    // User.findOne({email: req.body.email}).then((user)=>{
+    //     // console.log('sucess user', user)
+    //     return bcrypt.compare(req.body.password, user.password);
+    // })
+    // .then((passwordMatch)=>{
+    //     if(passwordMatch){
+    //         return res.status(200).header('token', user.tokens[0].token).send();
+    //     }
+    //     return res.status(401).send();
+    // })
+    // .catch((err)=>{
+    //     res.status(404).send(err +'ccccc');
+    // })
 })
 
 app.listen(port, (err)=>{
