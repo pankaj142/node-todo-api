@@ -22,6 +22,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
             let testingText = "xxxxx";
             request(app)
                .post('/todos')
+               .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication 
                .send({text : testingText})
                .expect(200)
                .expect((res)=>{
@@ -47,6 +48,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
         it('should not create todo with invalide body data.', (done)=>{
             request(app)
                 .post('/todos')
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication 
                 .send({})
                 .expect(400)
                 .end((err,res)=>{
@@ -67,9 +69,10 @@ describe('----------- TESTING ROUTES -------------', ()=>{
         it('should get all todos', (done)=>{
             request(app)
                 .get('/todos')
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication 
                 .expect(200)
                 .expect((response)=>{
-                    expect(JSON.parse(response.text).todos.length).to.equal(3);
+                    expect(JSON.parse(response.text).todos.length).to.equal(1);
                 })
                 .end(done);
         })
@@ -79,6 +82,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
         it('should return a todo doc.', (done)=>{
             request(app)
                 .get(`/todos/${dummyTodos[0]._id.toHexString()}`)
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication 
                 .expect(200)
                 .expect((res)=>{
                     expect(res.body.todo.text).to.equal(dummyTodos[0].text);
@@ -86,10 +90,19 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                 .end(done);
         });
 
+        it('should not return todo doc created by other user.', (done)=>{
+            request(app)
+                .get(`/todos/${dummyTodos[1]._id.toHexString()}`)
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication 
+                .expect(404)
+                .end(done);
+        });
+
         it('should retun 404 if todo is not found.', (done)=>{
             var dummyObjectId = new ObjectId().toHexString();
             request(app)
                 .get(`/todos/${dummyObjectId}`)
+                .set('x-auth',dummyUsers[0].tokens[0].token)//passing token for authentication 
                 .expect(404)
                 .end(done);
         });
@@ -97,6 +110,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
             var nonObjectId = '123';
             request(app)
                 .get(`/todos/${nonObjectId}`)
+                .set('x-auth',dummyUsers[0].tokens[0].token)//passing token for authentication 
                 .expect(404)
                 .end(done);
         });
@@ -107,6 +121,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
             var todoId = dummyTodos[0]._id.toHexString();
             request(app)
                 .delete(`/todos/${todoId}`)
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication 
                 .expect(200)
                 .expect((res)=>{
                     expect(res.body.todo._id).to.equal(todoId)
@@ -123,11 +138,29 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                     })
                 })
         })
-
+        it('should not delete todo created by other user.',(done)=>{
+            var todoId = dummyTodos[0]._id.toHexString();
+            request(app)
+                .delete(`/todos/${todoId}`)
+                .set('x-auth',dummyUsers[1].tokens[0].token) //passing token for authentication 
+                .expect(404)
+                .end((err,res)=>{
+                    if(err){
+                        return done(err);
+                    }
+                    Todos.findById(todoId).then((todo)=>{
+                        expect(todo).to.be.exist;
+                        done();
+                    }).catch((err)=>{
+                        done(err);
+                    })
+                })
+        })
         it('should return 404 if todo is not found.', (done)=>{
             var dummyObjectId = new ObjectId().toHexString();
             request(app)
                 .delete(`/todos/${dummyObjectId}`)
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication 
                 .expect(404)
                 .end(done)
         })
@@ -136,6 +169,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
             var nonObjectId = 123;
             request(app)
                 .delete(`/todos/${nonObjectId}`)
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication 
                 .expect(404)
                 .end(done)
         })
@@ -145,8 +179,9 @@ describe('----------- TESTING ROUTES -------------', ()=>{
         it('should update the todo.',  (done)=>{
             var newTodo = {text: "second todo modify", completed: true}
             request(app)
-                .patch(`/todos/${dummyTodos[1]._id}`)
+                .patch(`/todos/${dummyTodos[0]._id}`)
                 .send(newTodo)
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication
                 .expect(200)
                 .expect((res)=>{
                     expect(res.body.todo.text).to.equal(newTodo.text);
@@ -156,11 +191,22 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                 .end(done)
         })
 
+        it('should not update todo created by other user.',  (done)=>{
+            var newTodo = {text: "second todo modify", completed: true}
+            request(app)
+                .patch(`/todos/${dummyTodos[0]._id}`)
+                .send(newTodo)
+                .set('x-auth',dummyUsers[1].tokens[0].token) //passing token for authentication
+                .expect(404)
+                .end(done)
+        })
+
         it('should clear completedAt when todo is not completed.', (done)=>{
             var newTodo = {text: "todo is not completed", completed: false}
             request(app)
                 .patch(`/todos/${dummyTodos[0]._id}`)
                 .send(newTodo)
+                .set('x-auth',dummyUsers[0].tokens[0].token) //passing token for authentication
                 .expect(200)
                 .expect((res)=>{
                     expect(res.body.todo.text).to.equal(newTodo.text);
@@ -177,7 +223,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
         it('should return user if authenticated.',(done)=>{
             request(app)
                 .get('/users/me')
-                .set('x-auth', dummyUsers[0].tokens[0].token)
+                .set('x-auth', dummyUsers[0].tokens[0].token) //passing token for authentication 
                 .expect(200)
                 .expect((response)=>{
                     expect(response.body._id).to.be.equal(dummyUsers[0]._id.toHexString());
@@ -257,7 +303,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                         done(err);
                     }
                     User.findById(dummyUsers[1]._id).then((user)=>{
-                        expect(user.tokens[0]).to.deep.include({ 
+                        expect(user.tokens[1]).to.deep.include({ //becoz user.tokens[0] has a token added already while seeding
                             access: 'auth',
                             token: res.header['x-auth']
                         })
@@ -282,7 +328,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                         return done(err);
                     }
                     User.findById(dummyUsers[1]).then((user)=>{
-                        expect(user.tokens.length).to.be.equal(0);
+                        expect(user.tokens.length).to.be.equal(1); //lenght 1 becoz while seeding user has one token already
                         done();
                     }).catch((err)=>{
                         done(err);
@@ -295,7 +341,7 @@ describe('----------- TESTING ROUTES -------------', ()=>{
         it('should remove auth token on logout.', (done)=>{
             request(app)
                 .delete('/users/me/token')
-                .set('x-auth', dummyUsers[0].tokens[0].token)
+                .set('x-auth', dummyUsers[0].tokens[0].token) //passing token for authentication 
                 .expect(200)
                 .end((err, res)=>{
                     if(err){
