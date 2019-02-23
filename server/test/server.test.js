@@ -218,6 +218,8 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                         expect(user.email).to.be.equal(email)
                         expect(user.password).to.be.exist;
                         done();
+                    }).catch((err)=>{
+                        done(err);
                     })
                 })
         })
@@ -237,6 +239,55 @@ describe('----------- TESTING ROUTES -------------', ()=>{
                 })
                 .send(400)
                 .end(done)
+        })
+    })
+
+    describe('POST /users/login',()=>{
+        it('should return valid user and token',(done)=>{
+            request(app)
+                .post('/users/login')
+                .expect(200)
+                .send({email: dummyUsers[1].email, password: dummyUsers[1].password})
+                .expect((res)=>{
+                    expect(res.header['x-auth']).to.be.exist;
+                    expect(res.body.email).to.be.equal(dummyUsers[1].email)
+                })
+                .end((err,res)=>{
+                    if(err){
+                        done(err);
+                    }
+                    User.findById(dummyUsers[1]._id).then((user)=>{
+                        expect(user.tokens[0]).to.deep.include({ 
+                            access: 'auth',
+                            token: res.header['x-auth']
+                        })
+                        done();
+                    }).catch((err)=>{
+                        done(err);
+                    })
+                });
+        })
+
+        it('should reject invalid login', (done)=>{
+            request(app)
+                .post('/users/login')
+                .send({email: dummyUsers[1].email, password: dummyUsers[1].password + 'x'})
+                .expect(400)
+                .expect((res)=>{
+                    expect(res.header['x-auth']).to.be.undefined;
+                })
+                .end((err,res)=>{
+                    //if any token got save on user.tokens
+                    if(err){
+                        return done(err);
+                    }
+                    User.findById(dummyUsers[1]).then((user)=>{
+                        expect(user.tokens.length).to.be.equal(0);
+                        done();
+                    }).catch((err)=>{
+                        done(err);
+                    })
+                })
         })
     })
 })

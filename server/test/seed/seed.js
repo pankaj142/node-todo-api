@@ -36,7 +36,8 @@ const populateTodos = (done)=>{
 
 var userOneId = new ObjectId();
 var userTwoId = new ObjectId();
-const dummyUsers = [{
+const dummyUsers = [
+    {//logged in user as it contains token 
     _id: userOneId,
     email: 'dummyemail1@mail.com',
     password: 'dummyPassword1',
@@ -45,7 +46,7 @@ const dummyUsers = [{
         token : jwt.sign({_id: userOneId, access : 'auth'}, '123abc').toString()
     }]
 },
-{
+{//no token- no logged in
     _id: userTwoId,
     email: 'dummyemail2@mail.com',
     password: 'dummyPassword2'
