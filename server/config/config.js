@@ -2,15 +2,22 @@ var env = process.env.NODE_ENV || 'development';
 console.log("****** Environment => ", env);
 //Heroku while deploying app on cloud server sets process.env.NODE_ENV to 'production'
 //test script in package.json sets process.env.NODE_ENV to 'test'
-//if none of the above case, env is set to 'development' 
+//otherwise env is set to 'development' 
 
-if(env === 'development'){
-    process.env.PORT = 3000;
-    process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoApp';
-}else if(env === 'test'){
-    process.env.PORT = 3000;
-    process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoAppTest';
+if(env === "development" || env === "test"){
+    var config = require('./config.json');
+    var envConfig = config[env];
+    Object.keys(envConfig).forEach((key)=>{
+        process.env[key] = envConfig[key];
+    })
 }
+// if(env === 'development'){
+//     process.env.PORT = 3000;
+//     process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoApp';
+// }else if(env === 'test'){
+//     process.env.PORT = 3000;
+//     process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoAppTest';
+// }
 
 //Different Environments
 //1. development - we set when app runs locally 
